@@ -7,8 +7,6 @@ import cookieParser from 'cookie-parser';
 import productRoutes from './routes/product.route.js';
 
 
-
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
