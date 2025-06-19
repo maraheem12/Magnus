@@ -12,7 +12,7 @@ import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 router.get("/", protectRoute, adminRoute, getAllProducts);
-router.post("/", protectRoute, adminRoute, createProduct);
+router.post("/create", protectRoute, adminRoute, createProduct);
 router.delete("/:id", protectRoute, adminRoute, deleteProduct); // Assuming you want to delete a product by ID
 
 router.get("/featured", getFeaturedProducts);

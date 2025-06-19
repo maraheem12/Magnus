@@ -80,7 +80,7 @@ export const getFeaturedProducts = async (req, res) => {
         // if not found in redis, fetch from database
         // Assuming you have a Product model with a field isFeatured
         // and then store it in redis
-         featured = await Product.find({ isFeatured: true }).lean(); // Use lean() for better performance
+        featured = await Product.find({ isFeatured: true }).lean(); // Use lean() for better performance
         if(!featured) {
             return res.status(404).json({ message: "No featured products found" });
         }
@@ -115,7 +115,7 @@ export const getRecommendedProducts = async (req, res) => {
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
-
+                
 export const getProductsByCategory = async (req, res) => {
 	const { category } = req.params;
 	try {
