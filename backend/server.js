@@ -7,7 +7,8 @@ import cookieParser from 'cookie-parser';
 import productRoutes from './routes/product.route.js';
 import cartRoutes from './routes/cart.route.js';
 import couponRoutes from './routes/coupon.route.js';
-import couponPayments from './routes/couponPayment.route.js';
+import analyticsRoutes from './routes/analytics.route.js'; // Uncomment if you have analytics routes
+import PaymentsRoute from './routes/payment.route.js'; // Assuming you have a payments route
 
 
 const app = express();
@@ -22,7 +23,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use('/api/cart', cartRoutes)
 app.use('/api/coupons', couponRoutes)
-app.use('/api/payments', couponPayments)
+app.use('/api/payments', PaymentsRoute)
+app.use('/api/analytics', analyticsRoutes) 
 
 
 app.listen(PORT,()=>{
