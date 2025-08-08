@@ -1,108 +1,82 @@
 import { create } from "zustand";
+import toast from "react-hot-toast";
 import axios from "../lib/axios";
-import { toast } from "react-hot-toast";
 
-export const useUserStore = create((set, get) => ({
-	user: null,
+export const useProductStore = create((set) => ({
+	products: [],
 	loading: false,
-	checkingAuth: true,
 
-	signup: async ({ name, email, password, confirmPassword }) => {
+	setProducts: (products) => set({ products }),
+	createProduct: async (productData) => {
 		set({ loading: true });
-
-		if (password !== confirmPassword) {
-			set({ loading: false });
-			return toast.error("Passwords do not match");
-		}
-
 		try {
-			const res = await axios.post("/auth/signup", { name, email, password });
-			set({ user: res.data, loading: false });
+			const res = await axios.post("/products", productData);
+			set((prevState) => ({
+				products: [...prevState.products, res.data],
+				loading: false,
+			}));
 		} catch (error) {
+			toast.error(error.response.data.error);
 			set({ loading: false });
-			toast.error(error.response.data.message || "An error occurred");
 		}
 	},
-	login: async (email, password) => {
+	fetchAllProducts: async () => {
 		set({ loading: true });
-
 		try {
-			const res = await axios.post("/auth/login", { email, password });
-
-			set({ user: res.data, loading: false });
+			const response = await axios.get("/products");
+			set({ products: response.data.products, loading: false });
+		} catch (error) {
+			set({ error: "Failed to fetch products", loading: false });
+			toast.error(error.response.data.error || "Failed to fetch products");
+		}
+	},
+	fetchProductsByCategory: async (category) => {
+		set({ loading: true });
+		try {
+			const response = await axios.get(`/products/category/${category}`);
+			set({ products: response.data.products, loading: false });
+		} catch (error) {
+			set({ error: "Failed to fetch products", loading: false });
+			toast.error(error.response.data.error || "Failed to fetch products");
+		}
+	},
+	deleteProduct: async (productId) => {
+		set({ loading: true });
+		try {
+			await axios.delete(`/products/${productId}`);
+			set((prevProducts) => ({
+				products: prevProducts.products.filter((product) => product._id !== productId),
+				loading: false,
+			}));
 		} catch (error) {
 			set({ loading: false });
-			toast.error(error.response.data.message || "An error occurred");
+			toast.error(error.response.data.error || "Failed to delete product");
 		}
 	},
-
-	logout: async () => {
+	toggleFeaturedProduct: async (productId) => {
+		set({ loading: true });
 		try {
-			await axios.post("/auth/logout");
-			set({ user: null });
+			const response = await axios.patch(`/products/${productId}`);
+			// this will update the isFeatured prop of the product
+			set((prevProducts) => ({
+				products: prevProducts.products.map((product) =>
+					product._id === productId ? { ...product, isFeatured: response.data.isFeatured } : product
+				),
+				loading: false,
+			}));
 		} catch (error) {
-			toast.error(error.response?.data?.message || "An error occurred during logout");
+			set({ loading: false });
+			toast.error(error.response.data.error || "Failed to update product");
 		}
 	},
-
-	checkAuth: async () => {
-		set({ checkingAuth: true });
+	fetchFeaturedProducts: async () => {
+		set({ loading: true });
 		try {
-			const response = await axios.get("/auth/profile");
-			set({ user: response.data, checkingAuth: false });
+			const response = await axios.get("/products/featured");
+			set({ products: response.data, loading: false });
 		} catch (error) {
-			console.log(error.message);
-			set({ checkingAuth: false, user: null });
-		}
-	},
-
-	refreshToken: async () => {
-		// Prevent multiple simultaneous refresh attempts
-		if (get().checkingAuth) return;
-
-		set({ checkingAuth: true });
-		try {
-			const response = await axios.post("/auth/refresh-token");
-			set({ checkingAuth: false });
-			return response.data;
-		} catch (error) {
-			set({ user: null, checkingAuth: false });
-			throw error;
+			set({ error: "Failed to fetch products", loading: false });
+			console.log("Error fetching featured products:", error);
 		}
 	},
 }));
-
-// TODO: Implement the axios interceptors for refreshing access token
-
-// Axios interceptor for token refresh
-let refreshPromise = null;
-
-axios.interceptors.response.use(
-	(response) => response,
-	async (error) => {
-		const originalRequest = error.config;
-		if (error.response?.status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
-
-			try {
-				// If a refresh is already in progress, wait for it to complete
-				if (refreshPromise) {
-					await refreshPromise;
-					return axios(originalRequest);
-				}
-
-				// Start a new refresh process
-				refreshPromise = useUserStore.getState().refreshToken();
-				await refreshPromise;
-				refreshPromise = null;
-
-				return axios(originalRequest);
-			} catch (refreshError) {
-				// If refresh fails, redirect to login or handle as needed
-				useUserStore.getState().logout();
-				return Promise.reject(refreshError);
-			}
-		}
-		return Promise.reject(error);
-	}
-);
