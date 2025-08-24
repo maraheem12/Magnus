@@ -2,7 +2,7 @@ import { create } from "zustand";
 import toast from "react-hot-toast";
 import axios from "../lib/axios";
 
-export const useProductStore = create((set) => ({
+export const useProductStore = create((set, get) => ({
 	products: [],
 	loading: false,
 
@@ -11,6 +11,7 @@ export const useProductStore = create((set) => ({
 		set({ loading: true });
 		try {
 			const res = await axios.post("/products", productData);
+	
 			set((prevState) => ({
 				products: [...prevState.products, res.data],
 				loading: false,

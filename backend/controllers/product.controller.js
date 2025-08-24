@@ -17,6 +17,7 @@ export const getFeaturedProducts = async (req, res) => {
 		let featuredProducts = await redis.get("featured_products");
 		if (featuredProducts) {
 			return res.json(JSON.parse(featuredProducts));
+			//converts into a javascript object
 		}
 
 		// if not in redis, fetch from mongodb
@@ -31,6 +32,7 @@ export const getFeaturedProducts = async (req, res) => {
 		// store in redis for future quick access
 
 		await redis.set("featured_products", JSON.stringify(featuredProducts));
+		// converts into a string to store in redis
 
 		res.json(featuredProducts);
 	} catch (error) {

@@ -10,7 +10,7 @@ export const useCartStore = create((set, get) => ({
 	isCouponApplied: false,
 
 	getMyCoupon: async () => {
-		try {
+		try {	
 			const response = await axios.get("/coupons");
 			set({ coupon: response.data });
 		} catch (error) {
